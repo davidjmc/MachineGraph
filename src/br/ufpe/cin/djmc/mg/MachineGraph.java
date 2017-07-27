@@ -11,6 +11,8 @@ import org.kohsuke.graphviz.Edge;
 import org.kohsuke.graphviz.Graph;
 import org.kohsuke.graphviz.GraphObject;
 
+import br.ufpe.cin.djmc.basic.EdgeGraph;
+import br.ufpe.cin.djmc.basic.NodeGraph;
 import uk.ac.ox.cs.fdr.Assertion;
 import uk.ac.ox.cs.fdr.DeadlockFreeAssertion;
 import uk.ac.ox.cs.fdr.Event;
@@ -24,12 +26,14 @@ import uk.ac.ox.cs.fdr.TransitionList;
 import uk.ac.ox.cs.fdr.fdr;
 
 public class MachineGraph {
+	static int nodeID = 0;
+	static int destinationID = 0;
+	static Machine machine;
+	static Map<Integer, NodeGraph> nodegraphs = new HashMap<>();
 
 	public static void main(String[] args) {
 
 		PrintStream out = System.out;
-		Machine machine;
-		Node node;
 		ArrayList<Node> nodes = new ArrayList<Node>();
 		ArrayList<Action> actions = new ArrayList<>();
 
@@ -45,13 +49,13 @@ public class MachineGraph {
 
 				if (assertion instanceof DeadlockFreeAssertion) {
 					machine = ((DeadlockFreeAssertion) assertion).machine();
-					node = machine.rootNode();
+					Node node = machine.rootNode();
 
 					for (Transition transition : machine.transitions(node)) {
 						describeTransitions(out, machine, session, node, transition, nodes, actions, true);
 					}
 
-	//				createGraph(machine, session, actions);
+					createGraph(machine, session, actions);
 
 				}
 			}
@@ -67,17 +71,23 @@ public class MachineGraph {
 
 	private static void describeTransitions(PrintStream out, Machine machine, Session session, Node node,
 			Transition transition, ArrayList<Node> nodes, ArrayList<Action> actions, boolean recurse) {
-
+		
+		//EdgeGraph event = new EdgeGraph(session.uncompileEvent(transition.event()));
+		
 		Event event = session.uncompileEvent(transition.event());
 		Node destination = transition.destination();
 
-		out.println(node + " -> " +  event + " -> " + destination + "<>");
+		nodeID = nodeID + 1;
+		destinationID = nodeID + 1;
 
-		Action action = new Action(node, event, destination);
+		if (node.equals(machine.rootNode())) {
+			nodeID = 1;
+			destinationID = nodeID + 1;
+		}
 
-		actions.add(action);
+		out.println(node + " -> " + event + " -> " + destination);
 
-		TransitionList childList = machine.transitions(transition.destination());
+		TransitionList childList = machine.transitions(destination);
 
 		if (childList.isEmpty()) {
 			recurse = false;
@@ -89,15 +99,17 @@ public class MachineGraph {
 
 		if (!nodes.contains(machine.rootNode())) {
 			nodes.add(machine.rootNode());
+			nodegraphs.put(nodeID, new NodeGraph(nodeID, machine.rootNode()));
 		}
-
-		if (!nodes.contains(transition.destination())) {
-			nodes.add(transition.destination());
+		
+		if (!nodes.contains(destination)) {
+			nodes.add(destination);
+			nodegraphs.put(destinationID, new NodeGraph(destinationID, destination));
 		}
-
+		
 		if (recurse) {
-			for (Transition child : machine.transitions(transition.destination())) {
-				describeTransitions(out, machine, session, transition.destination(), child, nodes, actions, true);
+			for (Transition child : machine.transitions(destination)) {
+				describeTransitions(out, machine, session, destination, child, nodes, actions, true);
 			}
 		}
 
@@ -109,8 +121,9 @@ public class MachineGraph {
 		g.id(session.machineName(machine).toString());
 
 		for (Action action : actions) {
-			Edge e = new Edge(new org.kohsuke.graphviz.Node().id(action.from),
-					new org.kohsuke.graphviz.Node().id(action.to));
+					
+			Edge e = new Edge(new org.kohsuke.graphviz.Node().id(String.valueOf(action.getFrom().getId())),
+					new org.kohsuke.graphviz.Node().id(String.valueOf(action.getTo().getId())));
 			g.edge(e);
 		}
 

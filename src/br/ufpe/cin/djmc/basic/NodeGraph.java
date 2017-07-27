@@ -4,14 +4,20 @@ import uk.ac.ox.cs.fdr.Node;
 
 public class NodeGraph {
 	
-	char id;
+	int id;
 	Node node;
 	
-	public char getId() {
+	public NodeGraph(int id, Node node) {
+		super();
+		this.id = id;
+		this.node = node;
+	}
+
+	public int getId() {
 		return id;
 	}
 	
-	public void setId(char id) {
+	public void setId(int id) {
 		this.id = id;
 	}
 	
