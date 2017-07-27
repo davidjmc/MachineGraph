@@ -1,4 +1,4 @@
-package djmc;
+package br.ufpe.cin.djmc.mg;
 
 import uk.ac.ox.cs.fdr.Event;
 import uk.ac.ox.cs.fdr.Node;
@@ -40,6 +40,11 @@ public class Action {
 		this.event = event;
 	}
 	
-	
+	String describeAction() {
+		String action = null;
+		
+		return action;
+		
+	}
 	
 }
