@@ -1,7 +1,9 @@
 package br.ufpe.cin.djmc.mg;
 
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
-
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -126,7 +128,23 @@ public class MachineGraph {
 					new org.kohsuke.graphviz.Node().id(String.valueOf(action.getTo().getId())));
 			g.edge(e);
 		}
-
+		
+		String dotfile = session.machineName(machine).toString() + ".dot";
+		
+		PrintWriter writer;
+		try {
+			try {
+				writer = new PrintWriter(dotfile, "UTF-8");
+				
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		g.writeTo(System.out);
 	}
 
