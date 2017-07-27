@@ -1,0 +1,9 @@
+channel a, b, c, d, e, f, g, h, i
+
+P1 = a -> b -> (c -> P1 [] d -> P1)
+
+assert P1 :[deadlock free]
+
+
+
+

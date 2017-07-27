@@ -1,0 +1,13 @@
+channel request, reply, calculate
+
+User = request -> reply -> User
+Calculator = request -> calculate -> reply -> Calculator 
+Main = User [|{|request,reply|}|] Calculator
+
+assert Main :[deadlock free]
+
+
+ 
+
+
+
