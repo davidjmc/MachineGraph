@@ -1,7 +1,0 @@
-channel colocar_dinheiro, seleciona_cafe, produz_cafe, serve_cafe, seleciona_chocolate, produz_chocolate, serve_chocolate
-
-MAQUINA = colocar_dinheiro -> 
-
-(seleciona_cafe -> produz_cafe -> serve_cafe -> MAQUINA [] seleciona_chocolate -> produz_chocolate -> serve_chocolate -> MAQUINA [] SKIP)
-	
-assert MAQUINA :[deadlock free]
