@@ -4,16 +4,16 @@ import br.ufpe.cin.djmc.basic.NodeGraph;
 import uk.ac.ox.cs.fdr.Event;
 
 public class Action {
-	
+
 	NodeGraph from;
 	NodeGraph to;
 	Event event;
-	
+
 	public Action(NodeGraph node, Event event, NodeGraph destination) {
 		this.from = node;
 		this.event = event;
 		this.to = destination;
-		
+
 	}
 
 	public NodeGraph getFrom() {

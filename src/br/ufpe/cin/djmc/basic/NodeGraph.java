@@ -3,10 +3,10 @@ package br.ufpe.cin.djmc.basic;
 import uk.ac.ox.cs.fdr.Node;
 
 public class NodeGraph {
-	
+
 	int id;
 	Node node;
-	
+
 	public NodeGraph(int id, Node node) {
 		super();
 		this.id = id;
@@ -16,15 +16,15 @@ public class NodeGraph {
 	public int getId() {
 		return id;
 	}
-	
+
 	public void setId(int id) {
 		this.id = id;
 	}
-	
+
 	public Node getNode() {
 		return node;
 	}
-	
+
 	public void setNode(Node node) {
 		this.node = node;
 	}
