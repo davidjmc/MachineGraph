@@ -1,19 +1,15 @@
 package br.ufpe.cin.djmc.mg;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.kohsuke.graphviz.Edge;
 import org.kohsuke.graphviz.Graph;
-import org.kohsuke.graphviz.GraphObject;
 
-import br.ufpe.cin.djmc.basic.EdgeGraph;
 import br.ufpe.cin.djmc.basic.NodeGraph;
 import uk.ac.ox.cs.fdr.Assertion;
 import uk.ac.ox.cs.fdr.DeadlockFreeAssertion;
@@ -21,7 +17,6 @@ import uk.ac.ox.cs.fdr.Event;
 import uk.ac.ox.cs.fdr.InputFileError;
 import uk.ac.ox.cs.fdr.Machine;
 import uk.ac.ox.cs.fdr.Node;
-import uk.ac.ox.cs.fdr.NodePath;
 import uk.ac.ox.cs.fdr.Session;
 import uk.ac.ox.cs.fdr.Transition;
 import uk.ac.ox.cs.fdr.TransitionList;
@@ -31,18 +26,20 @@ public class MachineGraph {
 	static int nodeID = 0;
 	static int destinationID = 0;
 	static Machine machine;
-	static Map<Integer, NodeGraph> nodegraphs = new HashMap<>();
+	static ArrayList<Action> actions = new ArrayList<>();
+	static ArrayList<NodeGraph> nodegraphs = new ArrayList<>();
 
 	public static void main(String[] args) {
 
 		PrintStream out = System.out;
 		ArrayList<Node> nodes = new ArrayList<Node>();
-		ArrayList<Action> actions = new ArrayList<>();
+		
 
 		try {
 
 			Session session = new Session();
 			session.loadFile("ClientServerConf.csp");
+			//session.loadFile("test.csp");
 
 			for (Assertion assertion : session.assertions()) {
 
@@ -54,9 +51,9 @@ public class MachineGraph {
 					Node node = machine.rootNode();
 
 					for (Transition transition : machine.transitions(node)) {
-						describeTransitions(out, machine, session, node, transition, nodes, actions, true);
+						describeTransitions(out, machine, session, node, transition, nodes, true);
 					}
-
+					
 					createGraph(machine, session, actions);
 
 				}
@@ -72,9 +69,7 @@ public class MachineGraph {
 	}
 
 	private static void describeTransitions(PrintStream out, Machine machine, Session session, Node node,
-			Transition transition, ArrayList<Node> nodes, ArrayList<Action> actions, boolean recurse) {
-		
-		//EdgeGraph event = new EdgeGraph(session.uncompileEvent(transition.event()));
+			Transition transition, ArrayList<Node> nodes, boolean recurse) {
 		
 		Event event = session.uncompileEvent(transition.event());
 		Node destination = transition.destination();
@@ -84,10 +79,13 @@ public class MachineGraph {
 
 		if (node.equals(machine.rootNode())) {
 			nodeID = 1;
-			destinationID = nodeID + 1;
+		}
+		
+		if (destination.equals(machine.rootNode())) {
+			destinationID = 1;
 		}
 
-		out.println(node + " -> " + event + " -> " + destination);
+		//out.println(node + " -> " + event + " -> " + destination);
 
 		TransitionList childList = machine.transitions(destination);
 
@@ -99,19 +97,39 @@ public class MachineGraph {
 			recurse = false;
 		}
 
-		if (!nodes.contains(machine.rootNode())) {
+/*		if (!nodes.contains(machine.rootNode())) {
 			nodes.add(machine.rootNode());
 			nodegraphs.put(nodeID, new NodeGraph(nodeID, machine.rootNode()));
+		}*/
+		
+		NodeGraph src = new NodeGraph(nodeID, node);
+		if (!nodes.contains(node)) {
+			nodes.add(node);
+			nodegraphs.add(src);
 		}
 		
+		NodeGraph dest = new NodeGraph(destinationID, destination);
 		if (!nodes.contains(destination)) {
 			nodes.add(destination);
-			nodegraphs.put(destinationID, new NodeGraph(destinationID, destination));
+			nodegraphs.add(dest);
 		}
+		
+		for(NodeGraph nodegraph: nodegraphs) {
+			if(nodegraph.getNode().equals(node)) {
+				src = nodegraph;
+			}
+			
+			if(nodegraph.getNode().equals(destination)) {
+				dest = nodegraph;
+			}
+		}
+		
+		Action action = new Action(src, event, dest);
+		actions.add(action);
 		
 		if (recurse) {
 			for (Transition child : machine.transitions(destination)) {
-				describeTransitions(out, machine, session, destination, child, nodes, actions, true);
+				describeTransitions(out, machine, session, destination, child, nodes, true);
 			}
 		}
 
@@ -123,29 +141,22 @@ public class MachineGraph {
 		g.id(session.machineName(machine).toString());
 
 		for (Action action : actions) {
+			
+			String event = action.getEvent().toString();
 					
 			Edge e = new Edge(new org.kohsuke.graphviz.Node().id(String.valueOf(action.getFrom().getId())),
-					new org.kohsuke.graphviz.Node().id(String.valueOf(action.getTo().getId())));
+					new org.kohsuke.graphviz.Node().id(String.valueOf(action.getTo().getId()) + " [ label=\"" + event + "\"];"));
 			g.edge(e);
 		}
 		
-		String dotfile = session.machineName(machine).toString() + ".dot";
-		
-		PrintWriter writer;
+		OutputStream out = null;
 		try {
-			try {
-				writer = new PrintWriter(dotfile, "UTF-8");
-				
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			out = new FileOutputStream(new File(session.machineName(machine).toString()));
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		g.writeTo(System.out);
+	
+		g.writeTo(out);
 	}
 
 }
